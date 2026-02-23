@@ -15,7 +15,7 @@ Repositorio para la materia de **Aprendizaje Automatico** - Maestria en Intelige
 
 **Docente:** Ingeniera GLADYS MARIA VILLEGAS RUGEL
 
-**Fecha de Ultima Actualizacion:** 05 Febrero 2026
+**Fecha de Ultima Actualizacion:** 23 Febrero 2026
 
 Para instalar las librerias y dependencias ejecute:
 
