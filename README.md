@@ -1,25 +1,27 @@
-# Proyecto: Implementación y evaluación de modelos de aprendizaje supervisado en Python
-# Universidad de Especializades Espiritu Santo
-# Maestria en Inteligencia Artificial
+# Proyecto: Implementar un modelo de ML aplicado a un problema real considerando aspectos de calidad de datos y mitigación de sesgos, aplicar técnicas de explicabilidad (XAI), reflexionar sobre principios éticos y documentar correctamente el flujo completo del proyecto
+
+**Universidad de Especialidades Espiritu Santo**
+**Maestria en Inteligencia Artificial**
 
 Repositorio para la materia de **Aprendizaje Automatico** - Maestria en Inteligencia Artificial, UEES.
 
 ---
-Estudiantes:
 
-Ingeniero Gonzalo Mejia Alcivar
+**Estudiantes:**
 
-Ingeniero Jorge Ortiz Merchan
+- Ingeniero Gonzalo Mejia Alcivar
+- Ingeniero Jorge Ortiz Merchan
+- Ingeniero David Perugachi Rojas
 
-Ingeniero David Perugachi Rojas
+**Docente:** Ingeniera GLADYS MARIA VILLEGAS RUGEL
 
-Docente: Ingeniera GLADYS MARIA VILLEGAS RUGEL
+**Fecha de Ultima Actualizacion:** 05 Febrero 2026
 
-Fecha de Ultima Actualizacion: 05 Febrero 2026
+Para instalar las librerias y dependencias ejecute:
 
-# Para instalar las Librerias y Dependiencias ejecute: 
-
+```bash
 pip install -r requirements.txt
+```
 
 ---
 
@@ -27,7 +29,10 @@ pip install -r requirements.txt
 
 ### Objetivo
 
-Desarrollar un modelo de Machine Learning de clasificacion que permita categorizar a las empresas del Ecuador segun su nivel de desempeno financiero (**alto**, **medio** y **bajo**), utilizando datos financieros historicos, sectoriales y geograficos, con el fin de apoyar la toma de decisiones estrategicas en los ambitos financiero, empresarial y de gestion economica.
+- Implementar un modelo de ML aplicado a un problema real considerando aspectos de calidad de datos y mitigacion de sesgos.
+- Aplicar tecnicas de explicabilidad (XAI) para mejorar la transparencia y la comprension de las decisiones del modelo.
+- Reflexionar sobre los principios eticos en el diseno e implementacion de sistemas automatizados.
+- Documentar correctamente el flujo completo del proyecto incluyendo evaluacion, justificacion y comunicacion de resultados.
 
 ### Descripcion del Dominio
 
