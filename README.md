@@ -427,7 +427,7 @@ Los 3 modelos entrenados junto con los artefactos de preprocesamiento fueron exp
 > Script: [`scr/5_ProbarModelosProduccion.py`](scr/5_ProbarModelosProduccion.py)
 > Datos de prueba: [`Data/datos_prueba_produccion.json`](Data/datos_prueba_produccion.json)
 
-### Descripcion
+### Descripcion de la Prueba en Produccion
 
 Se cargaron los 3 modelos exportados (`.pkl`) y se probaron con **10 empresas ficticias** definidas en un archivo JSON, cada una con un desempeno esperado (Alto, Medio o Bajo). El objetivo es evaluar la eficiencia y confiabilidad de cada modelo ante datos completamente nuevos.
 
@@ -505,3 +505,213 @@ Grafico radar con 5 dimensiones (Accuracy General, Confianza Media, Confianza Mi
 #### 31. Informe Completo de Produccion
 
 ![Informe Produccion](results/31_informe_produccion_completo.png)
+
+---
+
+## Explicabilidad XAI - Tecnica 1: SHAP y Permutation Feature Importance
+
+> Script: [`scr/7_ExplicabilidadSHAP.py`](scr/7_ExplicabilidadSHAP.py)
+> Prerequisito: `pip install shap`
+
+### Descripcion de SHAP y PFI
+
+Se aplicaron dos tecnicas de explicabilidad complementarias sobre los modelos entrenados:
+
+- **SHAP (SHapley Additive exPlanations):** Calcula la contribucion marginal de cada feature a cada prediccion individual, con base en la teoria de juegos cooperativos. Se utilizo `TreeExplainer`, optimizado para modelos basados en arboles (Random Forest).
+- **Permutation Feature Importance (PFI):** Mide la caida en el F1-Score cuando se permutan aleatoriamente los valores de cada feature. Se calcula para los 3 modelos (5 repeticiones) y permite evaluar la importancia de cada variable de forma independiente del modelo.
+
+### Parametros de Ejecucion
+
+| Parametro | Valor |
+|---|---|
+| Muestra para SHAP | 2,000 registros (del conjunto de prueba) |
+| Muestra para PFI | 5,000 registros |
+| Repeticiones PFI | 5 (para calcular media ± desviacion estandar) |
+| Metrica PFI | F1-Score (weighted) |
+| Modelo base SHAP | Random Forest |
+| Modelos PFI | Arbol de Decision, SVM, Random Forest |
+
+### Variables que mas Influyen en la Decision
+
+Segun **SHAP global** (Random Forest), las features se ordenan por su media absoluta de impacto en las predicciones. Las features con mayor importancia SHAP son las que mas desplazan la probabilidad de prediccion desde el valor base del modelo. Los resultados muestran que las variables financieras derivadas (`UtilidadNeta`, `IngresosTotales`, `Margen_Neto`) dominan la decision, mientras que variables como `Sector` o `Cant_Empleados` tienen impacto marginal.
+
+La **Permutation Feature Importance** confirma este ranking de forma independiente al tipo de modelo: al permutar `UtilidadNeta`, el F1-Score cae significativamente en los 3 clasificadores, validando su rol critico.
+
+### Comparacion de Tecnicas SHAP vs PFI
+
+| Aspecto | SHAP | Permutation Feature Importance |
+|---|---|---|
+| Tipo de explicacion | Local (por prediccion) + Global | Global (por modelo) |
+| Modelo evaluado | Random Forest | Los 3 modelos |
+| Interpretacion | Contribucion marginal de cada feature | Caida en rendimiento al eliminar la feature |
+| Costo computacional | Alto (TreeExplainer reduce el costo) | Medio (depende del modelo) |
+| Consistencia entre clases | Si (una curva por clase) | Si (una barra por modelo y feature) |
+
+La imagen `39_shap_vs_pfi_comparativa.png` muestra ambas tecnicas normalizadas a [0,1] para comparacion directa.
+
+### Explicaciones Individuales de Predicciones
+
+El **SHAP Waterfall Plot** (`34_shap_waterfall_individual.png`) muestra la explicacion individual de una prediccion concreta por cada clase:
+
+- **Empresa clasificada como Alto:** Las barras rojas (contribucion positiva) muestran que un `Margen_Neto` elevado y una `UtilidadNeta` alta son las principales razones que llevan al modelo a predecir "Alto desempeno".
+- **Empresa clasificada como Bajo:** Las barras azules (contribucion negativa) reflejan que `IngresosTotales` bajos y perdidas en `UtilidadNeta` reducen la probabilidad de las clases Alto y Medio, empujando la prediccion hacia "Bajo".
+- **Empresa clasificada como Medio:** La prediccion resulta de un balance entre features que empujan hacia Alto (patrimonio positivo) y features que limitan esa clasificacion (margen neto moderado).
+
+### Visualizaciones SHAP y PFI
+
+#### 32. SHAP Bar Plot - Importancia Global
+
+Barras horizontales con la media absoluta del valor SHAP de cada feature, promediando las 3 clases. Permite identificar de un vistazo las variables mas influyentes en el modelo.
+
+![SHAP Bar Plot Global](results/32_shap_barplot_global.png)
+
+#### 33. SHAP Beeswarm por Clase
+
+Panel de 3 graficos (uno por clase: Alto, Bajo, Medio) con puntos dispersos coloreados por el valor de la feature (azul = bajo, rojo = alto). Muestra como el valor de cada variable afecta positiva o negativamente la prediccion.
+
+![SHAP Beeswarm por Clase](results/33_shap_beeswarm_por_clase.png)
+
+#### 34. SHAP Waterfall - Explicaciones Individuales
+
+Tres graficos tipo cascada que explican una prediccion concreta por clase. Cada barra muestra la contribucion de una feature al desplazamiento desde el valor base del modelo hasta la prediccion final.
+
+![SHAP Waterfall Individual](results/34_shap_waterfall_individual.png)
+
+#### 35. SHAP Dependence Plot
+
+Relacion entre el valor de la feature mas importante y su contribucion SHAP, coloreada por la segunda feature mas importante. Permite detectar interacciones entre variables.
+
+![SHAP Dependence Plot](results/35_shap_dependence_plot.png)
+
+#### 36. SHAP Heatmap por Clase
+
+Mapa de calor con la importancia SHAP media absoluta de cada feature (filas) para cada clase (columnas). Resume de forma compacta como el modelo distribuye su atencion entre clases.
+
+![SHAP Heatmap por Clase](results/36_shap_heatmap_por_clase.png)
+
+#### 37. PFI Barplot por Modelo
+
+Tres paneles horizontales (uno por modelo) con la importancia por permutacion de cada feature, incluyendo barras de error (media ± desviacion estandar sobre 5 repeticiones).
+
+![PFI Barplot por Modelo](results/37_pfi_barplot_por_modelo.png)
+
+#### 38. PFI Heatmap Comparativo
+
+Heatmap que compara la importancia por permutacion de las 10 features en los 3 modelos simultaneamente. Verde = feature importante; rojo = feature perjudicial o irrelevante.
+
+![PFI Heatmap Comparativo](results/38_pfi_heatmap_comparativo.png)
+
+#### 39. Comparativa SHAP vs PFI
+
+Grafico de barras dobles que compara, para Random Forest, la importancia SHAP y la PFI de cada feature, ambas normalizadas a [0,1]. Permite verificar la consistencia entre ambas tecnicas.
+
+![SHAP vs PFI Comparativa](results/39_shap_vs_pfi_comparativa.png)
+
+---
+
+## Explicabilidad XAI - Tecnica 2: PDP y Arbol de Decision
+
+> Script: [`scr/8_ExplicabilidadPDP_Arbol.py`](scr/8_ExplicabilidadPDP_Arbol.py)
+
+### Descripcion de PDP y Arbol de Decision
+
+Se aplicaron dos tecnicas adicionales de explicabilidad:
+
+- **Partial Dependence Plots (PDP):** Muestra el efecto marginal de una o dos features sobre la probabilidad predicha por el modelo, promediando sobre la distribucion del resto de features. Complementa a SHAP al mostrar la tendencia global en lugar de contribuciones individuales.
+- **Visualizacion detallada del Arbol de Decision:** Expone la logica de decision del modelo mas interpretable (DecisionTree), analizando la estructura de nodos, las reglas extraidas y el efecto de la profundidad maxima sobre el rendimiento.
+
+### Parametros de Ejecucion PDP y Arbol
+
+| Parametro | Valor |
+|---|---|
+| Muestra para PDP | 3,000 registros (del conjunto de prueba) |
+| Curvas ICE individuales | 300 muestras |
+| Resolucion de grilla PDP | 50 puntos (1D), 20 puntos (2D) |
+| Profundidades evaluadas | 1 a 20 niveles |
+| Nodos del arbol analizados | Primeros 20 nodos internos |
+
+### Features Influyentes segun PDP y Arbol
+
+Las **top 4 features** segun la importancia Gini del Random Forest (usadas como base para los PDP) son las mismas que lidera SHAP: `UtilidadNeta`, `IngresosTotales`, `Margen_Neto` y `Activo`. Los PDP 1D confirman que el efecto de `UtilidadNeta` sobre la probabilidad de clase "Alto" es monotonicamente creciente: a mayor utilidad neta (escalada), mayor es la probabilidad predicha de desempeno alto.
+
+El **analisis de frecuencia de uso en nodos** del Arbol de Decision muestra que las mismas features aparecen repetidamente en los primeros niveles del arbol, lo que refuerza su importancia relativa frente al resto de variables del dataset.
+
+### Comparacion de Tecnicas PDP vs SHAP vs Gini
+
+| Aspecto | PDP | SHAP | Gini (DT/RF) |
+|---|---|---|---|
+| Tipo de efecto | Marginal promedio | Contribucion individual | Reduccion de impureza |
+| Interacciones | Parcialmente (PDP 2D) | Si (dependence plot) | No |
+| Explicacion local | No (solo global) | Si (waterfall) | No |
+| Modelo requerido | Cualquiera con predict_proba | Arboles (TreeExplainer) | Arboles |
+| Interpretabilidad | Alta | Alta | Media |
+
+La imagen `47_comparativa_tecnicas_xai.png` presenta las tres tecnicas (Gini DT, Gini RF, PDP rango) normalizadas a [0,1] para comparacion directa sobre las mismas features.
+
+### Explicaciones Individuales con ICE y PDP
+
+Los **ICE Plots** (`42_ice_plot_top_feature.png`) muestran 300 curvas individuales — una por empresa de prueba — de como cambia la probabilidad predicha al variar la feature mas importante, manteniendo el resto constante:
+
+- **Clase Alto:** Las curvas ICE muestran una tendencia positiva pronunciada: empresas con alta `UtilidadNeta` tienen consistentemente una probabilidad predicha cercana a 1.0 para la clase Alto.
+- **Clase Bajo:** La tendencia es inversa; a mayor utilidad neta, menor es la probabilidad de ser clasificada como Bajo. Las curvas individuales tienen poca dispersion, indicando que el modelo es robusto y consistente para esta clase.
+- **Clase Medio:** Las curvas ICE muestran mayor variabilidad individual, lo que explica por que la clase Medio es la mas dificil de predecir en produccion: el efecto de la feature principal no es suficientemente discriminante por si solo.
+
+### Analisis del Arbol de Decision
+
+| Metrica | Valor |
+|---|---|
+| Profundidad actual (modelo entrenado) | 10 |
+| Numero de hojas | Variable segun entrenamiento |
+| Profundidad optima (max F1 en prueba) | Determinada por analisis de poda |
+| Feature mas usada en nodos | `UtilidadNeta` |
+| Reduccion de Gini en raiz | ~0.60 → ~0.10 en hojas profundas |
+
+### Visualizaciones PDP y Arbol de Decision
+
+#### 40. PDP Top 4 Features por Clase
+
+Grilla 3×4 con un PDP por combinacion de clase (Alto, Bajo, Medio) × feature (top 4). Muestra la tendencia del modelo para cada feature y clase.
+
+![PDP Top 4 Features](results/40_pdp_top4_features_por_clase.png)
+
+#### 41. PDP Bidimensional - Interaccion entre Features
+
+Mapa de contorno 2D que muestra como la combinacion de las dos features mas importantes afecta la probabilidad predicha. Las zonas verdes indican alta probabilidad y las rojas indican baja probabilidad.
+
+![PDP Bidimensional](results/41_pdp_bidimensional_interaccion.png)
+
+#### 42. ICE Plot - Curvas Individuales
+
+Panel de 3 graficos (uno por clase) con 300 curvas ICE individuales (en color semitransparente) superpuestas con la linea PDP promedio (negra). Permite ver si el efecto de la feature es uniforme o heterogeneo entre empresas.
+
+![ICE Plot Top Feature](results/42_ice_plot_top_feature.png)
+
+#### 43. PDP Comparativo entre los 3 Modelos
+
+Tres paneles (uno por clase) mostrando el PDP de la feature mas importante para los 3 modelos simultaneamente. Permite comparar si los modelos tienen la misma "vision" del efecto de la variable.
+
+![PDP Comparativo Modelos](results/43_pdp_comparativo_modelos.png)
+
+#### 44. Arbol de Decision Detallado (primeros 4 niveles)
+
+Visualizacion completa del arbol con `plot_tree`: cada nodo muestra la feature de division, el umbral, la impureza Gini, el numero de muestras y la distribucion de clases. Los nodos se colorean segun la clase dominante.
+
+![Arbol Decision Detallado](results/44_arbol_decision_detallado.png)
+
+#### 45. Analisis Estructural del Arbol
+
+Panel con tres componentes: (1) tabla de los primeros 20 nodos internos con sus atributos, (2) frecuencia de uso de cada feature en el arbol completo, (3) reduccion de impureza Gini promedio por nivel de profundidad.
+
+![Arbol Analisis Nodos](results/45_arbol_analisis_nodos.png)
+
+#### 46. Profundidad vs Accuracy (Analisis de Poda)
+
+Dos graficos (Accuracy y F1-Score weighted) en funcion de la profundidad maxima del arbol (1 a 20 niveles), comparando entrenamiento vs prueba. Permite identificar visualmente el punto de sobreajuste y la profundidad optima.
+
+![Arbol Profundidad vs Accuracy](results/46_arbol_profundidad_vs_accuracy.png)
+
+#### 47. Comparativa de Tecnicas XAI
+
+Grafico de barras agrupadas que compara la importancia normalizada de cada feature segun tres tecnicas: Gini Impurity del Arbol de Decision, Gini Impurity del Random Forest y rango del PDP. Permite evaluar la consistencia entre metodos de explicabilidad.
+
+![Comparativa Tecnicas XAI](results/47_comparativa_tecnicas_xai.png)
