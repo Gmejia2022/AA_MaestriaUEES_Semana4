@@ -661,10 +661,10 @@ Los **ICE Plots** (`42_ice_plot_top_feature.png`) muestran 300 curvas individual
 | Metrica | Valor |
 |---|---|
 | Profundidad actual (modelo entrenado) | 10 |
-| Numero de hojas | Variable segun entrenamiento |
-| Profundidad optima (max F1 en prueba) | Determinada por analisis de poda |
-| Feature mas usada en nodos | `UtilidadNeta` |
-| Reduccion de Gini en raiz | ~0.60 → ~0.10 en hojas profundas |
+| Numero de hojas | 246 |
+| Nodos internos analizados | 245 |
+| Profundidad optima (max F1 en prueba) | 19 (F1 = 0.9914) |
+| Feature mas usada en nodos | `UtilidadNeta` (96 veces) |
 
 ### Visualizaciones PDP y Arbol de Decision
 
